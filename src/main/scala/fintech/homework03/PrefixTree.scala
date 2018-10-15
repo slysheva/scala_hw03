@@ -13,23 +13,30 @@ trait IPrefixTree[K, +V] {
   def get: V
 }
 
-class PrefixTree[K, +V](val value: Option[V], children: Map[K, PrefixTree[K, V]]) extends IPrefixTree[K, V] {
+class PrefixTree[K, +V](val value: Option[V],val children: Map[K, PrefixTree[K, V]]) extends IPrefixTree[K, V] {
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: PrefixTree[K, V] => that.children == children && that.value.getOrElse() == value.getOrElse()
+      case _ => false
+    }
+  }
 
   override def put[U >: V](path: Seq[K], value: U): PrefixTree[K, U] = {
     if (path.isEmpty)
-      return new PrefixTree[K, U](Some(value), children)
-    var subTree: PrefixTree[K, U]  = this
-    if (children contains path.head)
-      subTree = children(path.head)
-    new PrefixTree[K, U](this.value, children + (path.head -> subTree.put(path.tail, value)))
+       new PrefixTree[K, U](Some(value), children)
+    else if (children contains path.head)
+        new PrefixTree[K, U](this.value, children + (path.head -> children(path.head).put(path.tail, value)))
+    else
+      new PrefixTree[K, U](this.value, children + (path.head -> new PrefixTree[K, U](None, Map()).put(path.tail, value)))
   }
 
   override def sub(path: Seq[K]): PrefixTree[K, V] = {
     if (path.isEmpty)
-      return this
-    if (children contains path.head)
-      return children(path.head).sub(path.tail)
-    throw new NoSuchElementException
+       this
+    else if (children contains path.head)
+       children(path.head).sub(path.tail)
+    else
+        new PrefixTree[K, V](None, Map())
   }
 
   override def get: V = value.get

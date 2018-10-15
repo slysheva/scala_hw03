@@ -50,19 +50,20 @@ class PrefixTreeSpec extends FlatSpec with Matchers {
     withString.sub(Seq(1, 2.5)).sub(Seq("a", 4, 5)).get should be ("Hello")
   }
 
-  it should "throw exception in case of incorrect path given" in {
+  it should "return empty tree in case of incorrect path given" in {
     val tree: PrefixTree[Char, Int] = new PrefixTree[Char, Int](None, Map())
 
     val with42: PrefixTree[Char, Int] = tree.put("abcd", 42)
-    var exceptionCatched = false
-    try {
-      with42.sub("wrongPath")
-    }
-    catch  {
-      case exception: NoSuchElementException  => exceptionCatched = true
-    }
-    if (!exceptionCatched)
-      fail("There was no exception")
+    with42.sub("wrongPath") == (new PrefixTree[Char, Int](None, Map())) should be (true)
+  }
+
+  it should "throw an exception if there is no element" in {
+     val tree: PrefixTree[Char, Int] = new PrefixTree[Char, Int](None, Map.empty)
+     val res = tree
+       .put("abcd", 42)
+     assertThrows[NoSuchElementException] {
+       res.sub("wrongPath").get
+     }
   }
 
 
